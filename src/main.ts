@@ -1,3 +1,6 @@
+// most of this code is copied from https://github.com/ines/juniper
+// MIT License
+
 import { basicSetup } from "codemirror";
 import { python } from "@codemirror/lang-python";
 import {

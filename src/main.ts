@@ -96,9 +96,6 @@ const BRANCH = "main";
         name: KERNEL_TYPE,
       })
       .then((kernel) => {
-        kernel.statusChanged.connect((_, status) => {
-          console.log(`Status: ${status}`);
-        });
         return kernel;
       });
   }

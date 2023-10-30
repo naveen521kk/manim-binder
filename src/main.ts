@@ -190,6 +190,7 @@ const BRANCH = "main";
       ],
       parent: $input,
     });
+    cm.contentDOM.setAttribute("data-enable-grammarly", "false");
 
     // set value
     cm.dispatch({

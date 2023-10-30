@@ -222,44 +222,14 @@ const BRANCH = "main";
 
   function execute(outputArea: OutputArea, code: string) {
     if (_kernel) {
-      // if (this.isolateCells) {
-
       outputArea.model.clear();
       outputArea.model.add({
         output_type: "stream",
         name: "loading",
-        text: "Restarting kernel...",
+        text: "Loading...",
       });
-
-      _kernel
-        .restart()
-        .then(() => render(outputArea, code))
-        .catch(() => {
-          _kernel = null;
-          outputArea.model.clear();
-          outputArea.model.add({
-            output_type: "stream",
-            name: "failure",
-            text: "Failed to restart kernel",
-          });
-        });
-
-      // KernelAPI.restartKernel(_kernel.id)
-      //   .then(() => render(outputArea, code))
-      //   .catch(() => {
-      //     _kernel = null;
-      //     outputArea.model.clear();
-      //     outputArea.model.add({
-      //       output_type: "stream",
-      //       name: "failure",
-      //       text: "Failed to restart kernel",
-      //     });
-      //   });
-
+      render(outputArea, code);
       return;
-      // }
-      // this.render(outputArea, code);
-      // return;
     }
     const url = DEFAULT_URL.split("//")[1];
     const action = !_fromStorage ? "Launching" : "Reconnecting to";

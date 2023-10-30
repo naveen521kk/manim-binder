@@ -223,6 +223,14 @@ const BRANCH = "main";
   function execute(outputArea: OutputArea, code: string) {
     if (_kernel) {
       // if (this.isolateCells) {
+
+      outputArea.model.clear();
+      outputArea.model.add({
+        output_type: "stream",
+        name: "loading",
+        text: "Restarting kernel...",
+      });
+
       _kernel
         .restart()
         .then(() => render(outputArea, code))

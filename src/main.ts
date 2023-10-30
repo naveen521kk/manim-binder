@@ -3,13 +3,10 @@
 
 import { basicSetup } from "codemirror";
 import { python } from "@codemirror/lang-python";
-import {
-  syntaxHighlighting,
-  defaultHighlightStyle,
-} from "@codemirror/language";
 import { lineNumbers } from "@codemirror/view";
 import { keymap, EditorView } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
+import { oneDark } from "@codemirror/theme-one-dark";
 
 import { ServerConnection, KernelManager } from "@jupyterlab/services";
 import { OutputArea, OutputAreaModel } from "@jupyterlab/outputarea";
@@ -170,7 +167,7 @@ const BRANCH = "main";
       extensions: [
         basicSetup,
         python(),
-        syntaxHighlighting(defaultHighlightStyle),
+        oneDark,
         lineNumbers(),
         history(),
         keymap.of([

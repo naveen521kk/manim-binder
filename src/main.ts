@@ -33,6 +33,9 @@ const BRANCH = "main";
     input: "manim-binder-input",
     button: "manim-binder-button",
     output: "manim-binder-output",
+    wrapper: "manim-binder-wrapper",
+    title: "manim-binder-title",
+    meta: "manim-binder-meta",
   };
   const DEFAULT_URL = "https://mybinder.org";
 
@@ -132,8 +135,21 @@ const BRANCH = "main";
       }),
     });
 
+    const $wrapper = _$("div", DEFAULT_CLASS_NAMES.wrapper);
+    element.replaceWith($wrapper);
+
+    const $title = _$("h4", DEFAULT_CLASS_NAMES.title, "Try out manim!");
+    $wrapper.appendChild($title);
+
+    const $meta = _$("span", DEFAULT_CLASS_NAMES.meta, "Python 3 · via ");
+    $title.appendChild($meta);
+
+    const $link = _$("a", "", "Binder");
+    $link.setAttribute("href", DEFAULT_URL);
+    $meta.appendChild($link);
+
     const $cell = _$("div", DEFAULT_CLASS_NAMES.cell);
-    element.replaceWith($cell);
+    $wrapper.appendChild($cell);
     const $input = _$("div", DEFAULT_CLASS_NAMES.input);
     $cell.appendChild($input);
     const $button = _$("button", DEFAULT_CLASS_NAMES.button, "Run");
@@ -271,6 +287,32 @@ const BRANCH = "main";
     return _renderers;
   }
 
+  function setStyles() {
+    // create a <style> element
+    const style = document.createElement("style");
+    style.textContent = `
+      .${DEFAULT_CLASS_NAMES.wrapper} {
+        padding: 10px;
+      }
+
+      .${DEFAULT_CLASS_NAMES.title} {
+        text-align: center;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .${DEFAULT_CLASS_NAMES.meta} {
+        font-size: 0.75rem;
+        font-weight: 400;
+        padding-top: 0.1rem;
+        color: #666;
+      }
+    `
+
+    document.head.appendChild(style);
+  }
+
+  setStyles();
   const allCells = [...document.querySelectorAll("[data-interactive]")];
   allCells.forEach((cell) => renderCell(cell as HTMLElement));
 })();

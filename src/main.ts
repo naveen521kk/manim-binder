@@ -139,7 +139,7 @@ const BRANCH = "main";
     element.replaceWith($cell);
     const $input = _$("div", DEFAULT_CLASS_NAMES.input);
     $cell.appendChild($input);
-    const $button = _$("button", DEFAULT_CLASS_NAMES.button, "run");
+    const $button = _$("button", DEFAULT_CLASS_NAMES.button, "Run");
     $cell.appendChild($button);
     const $output = _$("div", DEFAULT_CLASS_NAMES.output);
     $cell.appendChild($output);

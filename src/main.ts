@@ -329,6 +329,10 @@ const BRANCH = "main";
         padding-top: 0.1rem;
         color: #666;
       }
+
+      .${DEFAULT_CLASS_NAMES.button} {
+        cursor: pointer;
+      }
     `;
 
     document.head.appendChild(style);

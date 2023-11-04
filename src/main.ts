@@ -177,6 +177,11 @@ const BRANCH = "main";
           console.error("no src for the video.");
           return;
         }
+
+        // set the max width to 100%
+        video.style.maxWidth = "100%";
+
+        // get the video data
         const fileData = await _contents_manager!.get(src);
         if (!fileData.mimetype.startsWith("video/")) {
           console.error("not a video");

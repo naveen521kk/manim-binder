@@ -8,7 +8,11 @@ import { keymap, EditorView } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { oneDark } from "@codemirror/theme-one-dark";
 
-import { ServerConnection, KernelManager } from "@jupyterlab/services";
+import {
+  ServerConnection,
+  KernelManager,
+  ContentsManager,
+} from "@jupyterlab/services";
 import { OutputArea, OutputAreaModel } from "@jupyterlab/outputarea";
 import {
   RenderMimeRegistry,
@@ -43,6 +47,7 @@ const BRANCH = "main";
   let _kernel: IKernelConnection | null = null;
   let _kernel_manager: KernelManager | null = null;
   let _renderers: IRenderMime.IRendererFactory[] | null = null;
+  let _contents_manager: ContentsManager | null = null;
 
   function requestBinder(
     repo: string,
@@ -94,6 +99,7 @@ const BRANCH = "main";
     }
     const serverSettings = ServerConnection.makeSettings(settings);
     _kernel_manager = new KernelManager({ serverSettings });
+    _contents_manager = new ContentsManager({ serverSettings });
     return _kernel_manager
       .startNew({
         name: KERNEL_TYPE,
@@ -164,15 +170,31 @@ const BRANCH = "main";
     // when a <video> is added to the output area, change it's
     // src to include the base url
     outputArea.model.changed.connect(() => {
-      $output.querySelectorAll("video").forEach((video) => {
+      $output.querySelectorAll("video").forEach(async (video) => {
         console.log("fixing video");
         const src = video.getAttribute("src");
-        if (src) {
-          video.setAttribute(
-            "src",
-            `${_kernel_manager!.serverSettings.baseUrl}/files/${src}`
-          );
+        if (!src) {
+          console.error("no src for the video.");
+          return;
         }
+        const fileData = await _contents_manager!.get(src);
+        if (!fileData.mimetype.startsWith("video/")) {
+          console.error("not a video");
+          return;
+        }
+
+        const binaryData = atob(fileData.content);
+
+        const arrayBuffer = new ArrayBuffer(binaryData.length);
+        const uint8Array = new Uint8Array(arrayBuffer);
+        for (let i = 0; i < binaryData.length; i++) {
+          uint8Array[i] = binaryData.charCodeAt(i);
+        }
+
+        const videoBlob = new Blob([uint8Array], { type: fileData.mimetype });
+        const videoUrl = URL.createObjectURL(videoBlob);
+        console.log("video url", videoUrl);
+        video.setAttribute("src", videoUrl);
       });
     });
 
@@ -307,7 +329,7 @@ const BRANCH = "main";
         padding-top: 0.1rem;
         color: #666;
       }
-    `
+    `;
 
     document.head.appendChild(style);
   }

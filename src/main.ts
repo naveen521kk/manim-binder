@@ -25,23 +25,56 @@ import type { IKernelConnection } from "@jupyterlab/services/lib/kernel/kernel";
 import { Widget } from "@lumino/widgets";
 import { MessageLoop } from "@lumino/messaging";
 
-const REPO = "ManimCommunity/jupyter_examples";
-const BRANCH = "main";
+interface ManimBinderClassNames {
+  cell: string;
+  input: string;
+  button: string;
+  output: string;
+  wrapper: string;
+  title: string;
+  meta: string;
+  buttonWrapper: string;
+}
 
-(function () {
-  const STORAGE_EXPIRE = 60;
-  const STORAGE_KEY = "manim-notebook-kernel";
-  const KERNEL_TYPE = "python3";
-  const DEFAULT_CLASS_NAMES = {
-    cell: "manim-binder-cell",
-    input: "manim-binder-input",
-    button: "manim-binder-button",
-    output: "manim-binder-output",
-    wrapper: "manim-binder-wrapper",
-    title: "manim-binder-title",
-    meta: "manim-binder-meta",
-  };
-  const DEFAULT_BINDER_URL = "https://mybinder.org";
+interface initManimBinderOptions {
+  repo?: string;
+  branch?: string;
+  storage_expire?: number;
+  storage_key?: string;
+  kernel_type?: string;
+  class_names?: ManimBinderClassNames;
+  binder_url?: string;
+}
+
+interface CustomWindow extends Window {
+  initManimBinder: (options?: initManimBinderOptions) => void;
+}
+
+const DEFAULT_REPO = "ManimCommunity/jupyter_examples";
+const DEFAULT_BRANCH = "main";
+const DEFAULT_STORAGE_EXPIRE = 60;
+const DEFAULT_STORAGE_KEY = "manim-notebook-kernel";
+const DEFAULT_KERNEL_TYPE = "python3";
+const DEFAULT_CLASS_NAMES: ManimBinderClassNames = {
+  cell: "manim-binder-cell",
+  input: "manim-binder-input",
+  button: "manim-binder-button",
+  output: "manim-binder-output",
+  wrapper: "manim-binder-wrapper",
+  title: "manim-binder-title",
+  meta: "manim-binder-meta",
+  buttonWrapper: "manim-binder-button-wrapper",
+};
+const DEFAULT_BINDER_URL = "https://mybinder.org";
+
+(function (window: CustomWindow) {
+  let repo = DEFAULT_REPO;
+  let branch = DEFAULT_BRANCH;
+  let storage_expire = DEFAULT_STORAGE_EXPIRE;
+  let storage_key = DEFAULT_STORAGE_KEY;
+  let kernel_type = DEFAULT_KERNEL_TYPE;
+  let class_names = DEFAULT_CLASS_NAMES;
+  let binder_url = DEFAULT_BINDER_URL;
 
   let _fromStorage = false;
   let _kernel: IKernelConnection | null = null;
@@ -52,7 +85,7 @@ const BRANCH = "main";
   function requestBinder(
     repo: string,
     branch: string,
-    url: string = DEFAULT_BINDER_URL
+    url: string = binder_url
   ) {
     const binderUrl = `${url}/build/gh/${repo}/${branch}`;
     return new Promise<{
@@ -93,16 +126,16 @@ const BRANCH = "main";
     token: string;
   }) {
     if (typeof window !== "undefined") {
-      const timestamp = new Date().getTime() + STORAGE_EXPIRE * 60 * 1000;
+      const timestamp = new Date().getTime() + storage_expire * 60 * 1000;
       const json = JSON.stringify({ settings, timestamp });
-      window.localStorage.setItem(STORAGE_KEY, json);
+      window.localStorage.setItem(storage_key, json);
     }
     const serverSettings = ServerConnection.makeSettings(settings);
     _kernel_manager = new KernelManager({ serverSettings });
     _contents_manager = new ContentsManager({ serverSettings });
     return _kernel_manager
       .startNew({
-        name: KERNEL_TYPE,
+        name: kernel_type,
       })
       .then((kernel) => {
         return kernel;
@@ -111,17 +144,17 @@ const BRANCH = "main";
 
   function getKernel() {
     if (typeof window !== "undefined") {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
+      const stored = window.localStorage.getItem(storage_key);
       if (stored) {
         _fromStorage = true;
         const { settings, timestamp } = JSON.parse(stored);
         if (timestamp && new Date().getTime() < timestamp) {
           return requestKernel(settings);
         }
-        window.localStorage.removeItem(STORAGE_KEY);
+        window.localStorage.removeItem(storage_key);
       }
     }
-    return requestBinder(REPO, BRANCH, DEFAULT_BINDER_URL).then((settings) =>
+    return requestBinder(repo, branch, binder_url).then((settings) =>
       requestKernel(settings)
     );
   }
@@ -133,7 +166,7 @@ const BRANCH = "main";
     return el;
   }
 
-  function renderCell(element: HTMLElement) {
+  function renderCell(element: HTMLElement, code: string = "") {
     const outputArea = new OutputArea({
       model: new OutputAreaModel({ trusted: true }),
       rendermime: new RenderMimeRegistry({
@@ -141,26 +174,26 @@ const BRANCH = "main";
       }),
     });
 
-    const $wrapper = _$("div", DEFAULT_CLASS_NAMES.wrapper);
+    const $wrapper = _$("div", class_names.wrapper);
     element.replaceWith($wrapper);
 
-    const $title = _$("h4", DEFAULT_CLASS_NAMES.title, "Try out manim!");
+    const $title = _$("h4", class_names.title, "Try out manim!");
     $wrapper.appendChild($title);
 
-    const $meta = _$("span", DEFAULT_CLASS_NAMES.meta, "Python 3 · via ");
+    const $meta = _$("span", class_names.meta, "Python 3 · via ");
     $title.appendChild($meta);
 
     const $link = _$("a", "", "Binder");
-    $link.setAttribute("href", DEFAULT_BINDER_URL);
+    $link.setAttribute("href", binder_url);
     $meta.appendChild($link);
 
-    const $cell = _$("div", DEFAULT_CLASS_NAMES.cell);
+    const $cell = _$("div", class_names.cell);
     $wrapper.appendChild($cell);
-    const $input = _$("div", DEFAULT_CLASS_NAMES.input);
+    const $input = _$("div", class_names.input);
     $cell.appendChild($input);
-    const $button = _$("button", DEFAULT_CLASS_NAMES.button, "Run");
+    const $button = _$("button", class_names.button, "Run");
     $cell.appendChild($button);
-    const $output = _$("div", DEFAULT_CLASS_NAMES.output);
+    const $output = _$("div", class_names.output);
     $cell.appendChild($output);
 
     MessageLoop.sendMessage(outputArea, Widget.Msg.BeforeAttach);
@@ -237,7 +270,7 @@ const BRANCH = "main";
       changes: {
         from: 0,
         to: cm.state.doc.length,
-        insert: (element.textContent || "").trim(),
+        insert: code.trim(),
       },
     });
 
@@ -271,7 +304,7 @@ const BRANCH = "main";
       render(outputArea, code);
       return;
     }
-    const url = DEFAULT_BINDER_URL.split("//")[1];
+    const url = binder_url.split("//")[1];
     const action = !_fromStorage ? "Launching" : "Reconnecting to";
     outputArea.model.clear();
     outputArea.model.add({
@@ -291,7 +324,7 @@ const BRANCH = "main";
         _kernel = null;
         if (typeof window !== "undefined") {
           _fromStorage = false;
-          window.localStorage.removeItem(STORAGE_KEY);
+          window.localStorage.removeItem(storage_key);
         }
         outputArea.model.clear();
         outputArea.model.add({
@@ -318,24 +351,24 @@ const BRANCH = "main";
     // create a <style> element
     const style = document.createElement("style");
     style.textContent = `
-      .${DEFAULT_CLASS_NAMES.wrapper} {
+      .${class_names.wrapper} {
         padding: 10px;
       }
 
-      .${DEFAULT_CLASS_NAMES.title} {
+      .${class_names.title} {
         text-align: center;
         display: flex;
         justify-content: space-between;
       }
 
-      .${DEFAULT_CLASS_NAMES.meta} {
+      .${class_names.meta} {
         font-size: 0.75rem;
         font-weight: 400;
         padding-top: 0.1rem;
         color: #666;
       }
 
-      .${DEFAULT_CLASS_NAMES.button} {
+      .${class_names.button} {
         cursor: pointer;
       }
     `;
@@ -343,7 +376,57 @@ const BRANCH = "main";
     document.head.appendChild(style);
   }
 
-  setStyles();
-  const allCells = [...document.querySelectorAll("[data-interactive]")];
-  allCells.forEach((cell) => renderCell(cell as HTMLElement));
-})();
+  function renderMakeInteractiveButton(element: HTMLElement) {
+    // get manim classname from data-manim-classname attribute
+    const manimClassname = element.getAttribute("data-manim-classname");
+    if (!manimClassname) {
+      console.error("No manim classname provided.");
+      return;
+    }
+
+    const wrapperDiv = _$("div", class_names.buttonWrapper);
+    element.replaceWith(wrapperDiv);
+
+    const makeInteractiveButton = _$(
+      "button",
+      class_names.button,
+      "Make interactive"
+    );
+    wrapperDiv.appendChild(makeInteractiveButton);
+
+    const makeInteractive = (_: any) => {
+      let code = element.textContent || "";
+      code += `\n\n# don't remove below command for run button to work`;
+      code += `\n%manim -qm -v WARNING ${manimClassname}`;
+      renderCell(wrapperDiv, code);
+    };
+    makeInteractiveButton.addEventListener("click", makeInteractive);
+  }
+
+  function initManimBinder({
+    repo: _repo,
+    branch: _branch,
+    storage_expire: _storage_expire,
+    storage_key: _storage_key,
+    kernel_type: _kernel_type,
+    class_names: _class_names,
+    binder_url: _binder_url,
+  }: initManimBinderOptions = {}) {
+    repo = _repo || repo;
+    branch = _branch || branch;
+    storage_expire = _storage_expire || storage_expire;
+    storage_key = _storage_key || storage_key;
+    kernel_type = _kernel_type || kernel_type;
+    class_names = _class_names || class_names;
+    binder_url = _binder_url || binder_url;
+
+    setStyles();
+
+    const allCells = [...document.querySelectorAll("[data-manim-binder]")];
+    allCells.forEach((cell) =>
+      renderMakeInteractiveButton(cell as HTMLElement)
+    );
+  }
+
+  window.initManimBinder = initManimBinder;
+})(window as unknown as CustomWindow);

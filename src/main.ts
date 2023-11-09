@@ -41,7 +41,7 @@ const BRANCH = "main";
     title: "manim-binder-title",
     meta: "manim-binder-meta",
   };
-  const DEFAULT_URL = "https://mybinder.org";
+  const DEFAULT_BINDER_URL = "https://mybinder.org";
 
   let _fromStorage = false;
   let _kernel: IKernelConnection | null = null;
@@ -52,7 +52,7 @@ const BRANCH = "main";
   function requestBinder(
     repo: string,
     branch: string,
-    url: string = DEFAULT_URL
+    url: string = DEFAULT_BINDER_URL
   ) {
     const binderUrl = `${url}/build/gh/${repo}/${branch}`;
     return new Promise<{
@@ -121,7 +121,7 @@ const BRANCH = "main";
         window.localStorage.removeItem(STORAGE_KEY);
       }
     }
-    return requestBinder(REPO, BRANCH, DEFAULT_URL).then((settings) =>
+    return requestBinder(REPO, BRANCH, DEFAULT_BINDER_URL).then((settings) =>
       requestKernel(settings)
     );
   }
@@ -151,7 +151,7 @@ const BRANCH = "main";
     $title.appendChild($meta);
 
     const $link = _$("a", "", "Binder");
-    $link.setAttribute("href", DEFAULT_URL);
+    $link.setAttribute("href", DEFAULT_BINDER_URL);
     $meta.appendChild($link);
 
     const $cell = _$("div", DEFAULT_CLASS_NAMES.cell);
@@ -271,7 +271,7 @@ const BRANCH = "main";
       render(outputArea, code);
       return;
     }
-    const url = DEFAULT_URL.split("//")[1];
+    const url = DEFAULT_BINDER_URL.split("//")[1];
     const action = !_fromStorage ? "Launching" : "Reconnecting to";
     outputArea.model.clear();
     outputArea.model.add({

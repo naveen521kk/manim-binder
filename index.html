@@ -7,7 +7,7 @@
   </head>
   <body>
     <div id="app"></div>
-    <pre data-interactive>
+    <pre data-manim-binder data-manim-classname="SquareToCircle">
 
 
 class SquareToCircle(Scene):
@@ -15,8 +15,20 @@ class SquareToCircle(Scene):
     circle = Circle()
     self.play(FadeIn(circle))
 
-%manim -qm -v WARNING SquareToCircle
     </pre>
-    <script src="dist/manim-binder.min.js" defer></script>
+
+    <pre data-manim-binder data-manim-classname="SquareToCircle1">
+
+class SquareToCircle1(Scene):
+  def construct(self):
+    circle = Square()
+    self.play(FadeIn(circle))
+
+          </pre
+    >
+    <script src="dist/manim-binder.min.js"></script>
+    <script>
+      window.initManimBinder({branch: "main"})
+    </script>
   </body>
 </html>
